@@ -14,8 +14,10 @@
 
 import pygame
 from pygame.locals import *
-import sys, os
-import random, pickle
+import sys
+import os
+import random
+import pickle
 
 '''
 Template used from Pygame Lecture
@@ -41,7 +43,8 @@ class cmuJump():
         self.direction = True
         self.shooting = False
 
-        #IMAGES
+        #IMAGES : https://www.pinterest.com/pin/82050024436991915/ +
+        #         https://github.com/Max00355/DoodleJump/tree/master/assets
         self.player1R = pygame.image.load("assets/right.png").convert_alpha()
         self.player2R = pygame.image.load("assets/right_1.png").convert_alpha()
         self.player1L = pygame.image.load("assets/left.png").convert_alpha()
@@ -140,9 +143,9 @@ class cmuJump():
                 multiplayer = self.font.render("Multiplayer!", False, self.greenColor)
 
             if 280+80 > self.mouse[0] > 280-85 and 370+25 > self.mouse[1] > 370-25:
-                highscores = self.font.render("Highscores", False, self.blackColor)
+                highscores = self.font.render("Highscores!", False, self.blackColor)
             else:
-                highscores = self.font.render("Highscores", False, self.greenColor)
+                highscores = self.font.render("Highscores!", False, self.greenColor)
 
             self.gameDisplay.fill(self.whiteColor)
 
@@ -179,6 +182,7 @@ class cmuJump():
     def updatePlayer(self):
         move = 10
         key = pygame.key.get_pressed()
+        #CITATION: https://github.com/Max00355/DoodleJump
         if key[K_RIGHT]:
             self.shooting = False
             self.direction = True
@@ -191,7 +195,6 @@ class cmuJump():
             self.playerX -= move
             if self.playerX < -50:
                 self.playerX = 425
-
         #DISPLAYING PLAYER FACING RIGHT DIRECTION AND JUMPING
         if self.direction and not self.shooting:
             if self.jump:
@@ -210,9 +213,10 @@ class cmuJump():
         else:
             self.gameDisplay.blit(self.shootingPlayer, 
                 (self.playerX,self.playerY - self.yScroller))
+        #END CITATION ##########################################
 
 
-        #Got this block of code online: https://www.raywenderlich.com/15230/
+        #CITATION: https://www.raywenderlich.com/15230/
         #how-to-make-a-platform-game-like-super-mario-brothers-part-1
         #Physics of player jumping
         if not self.jump:        
@@ -221,12 +225,14 @@ class cmuJump():
         elif self.jump:
             self.playerY -= self.jump
             self.jump -= 1
+        #####################################
+
         #SCROLLER
         displayMid = 300 + self.yScroller
         if self.playerY < displayMid:
             self.yScroller -= (displayMid - self.playerY)//25
         #KEEPING SCORE
-        if not self.jump:
+        if not self.jump and not self.gravity:
             self.score = 200 - self.playerY//10
 
         #MONSTER INTERACTION
@@ -262,6 +268,7 @@ class cmuJump():
             self.playerY += 25
             self.gameDisplay.blit(self.bam, (self.player2X,self.player2Y-self.yScroller-15))
 
+    #SAME CITATIONS AS updatePlayer()
     def updatePlayer2(self):
         move = 10
         key = pygame.key.get_pressed()
@@ -292,7 +299,7 @@ class cmuJump():
                 self.gameDisplay.blit(self.player1L2, 
                     (self.player2X,self.player2Y-self.yScroller))
 
-        #Got this block of code online: https://www.raywenderlich.com/15230/
+        #CITATION: https://www.raywenderlich.com/15230/
         #how-to-make-a-platform-game-like-super-mario-brothers-part-1
         #Physics of player jumping
         if not self.jump2:        
@@ -397,16 +404,16 @@ class cmuJump():
             (self.player1R.get_width()-10,50))
 
         if player.colliderect(player2) and self.playerY < self.player2Y:
-            self.playerDead = True
-
-        elif player2.colliderect(player) and self.player2Y < self.playerY:
             self.player2Dead = True
 
+        elif player2.colliderect(player) and self.player2Y < self.playerY:
+            self.playerDead = True
+
         if self.playerDead:
-            self.player2Y += 25
+            self.playerY += 20
             self.gameDisplay.blit(self.bam, (self.playerX,self.playerY-self.yScroller-15))
         elif self.player2Dead:
-            self.playerY += 25
+            self.player2Y += 20
             self.gameDisplay.blit(self.bam, (self.player2X,self.player2Y-self.yScroller-15))
 
     def play(self):
@@ -458,8 +465,10 @@ class cmuJump():
             self.makeMonsters()
             self.drawMonsters()
             self.drawBullets()
-            self.updatePlayer()
-            self.updatePlayer2()
+            if not self.playerDead:
+                self.updatePlayer()
+            if not self.player2Dead:
+                self.updatePlayer2()
             self.checkPlayerCollision()
             pygame.display.update()
             self.clock.tick(30)
@@ -564,6 +573,63 @@ class cmuJump():
             high_scores.close()
             return prevHighScore
 
+    def highscoresScreen(self):
+        highscores = True
+        menuFont = pygame.font.SysFont("Comic Sans MS", 40)
+        while highscores:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    gameOver = False
+                    pygame.quit()
+                    quit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_q:
+                        gameOver = False
+                        pygame.quit()
+                        quit()
+
+                self.mouse = pygame.mouse.get_pos()
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    #menu button pressed
+                    if 275+40 > self.mouse[0] > 275-40 and 470+20 > self.mouse[1] > 470-20:
+                        highscores = not highscores #False
+                        #enter splash screen
+                        self.mode = "splash"
+                        return
+
+            if 275+65 > self.mouse[0] > 275-50 and 470+35 > self.mouse[1] > 470-50:
+                menu = menuFont.render("Menu", False, self.blackColor)
+            else:
+                menu = menuFont.render("Menu", False, self.greenColor)
+
+            self.gameDisplay.fill(self.whiteColor)
+
+            title = self.titleFont.render("Highscores!", False, self.greenColor)
+            self.gameDisplay.blit(title, (75, 50))
+
+            score1 = self.font.render("Kosbie : 100,000", False, self.greenColor)
+            score2 = self.font.render("DGA : 100,000", False, self.greenColor)
+            score3 = self.font.render("Rohan : 50,000", False, self.greenColor)
+            score4 = self.font.render("Eddie : 50,000", False, self.greenColor)
+            score5 = self.font.render("Tetris : 10,000", False, self.greenColor)
+            score6 = self.font.render("playGame42 : -50,000 !", False, self.greenColor)
+
+            self.gameDisplay.blit(score1,(40, 150))
+            self.gameDisplay.blit(score2, (40,200))
+            self.gameDisplay.blit(score3, (40,250))
+            self.gameDisplay.blit(score4, (40,300))
+            self.gameDisplay.blit(score5, (40,350))
+            self.gameDisplay.blit(score6, (40,400))
+            self.gameDisplay.blit(menu, (240,450))
+
+            #RANDOM MOVEMENT OF MONSTER 
+            monsterX = random.randint(25,90)
+            monsterY = random.randint(440,475)
+            self.gameDisplay.blit(self.monster, (monsterX,monsterY))
+
+            pygame.display.update()
+            self.clock.tick(8)
+
     def main(self):
         self.mode = "splash"
         On = True
@@ -582,8 +648,8 @@ class cmuJump():
                 self.splashScreen()
             elif self.mode == "play":
                 self.play()
-            #elif self.mode == "gameOver":
-            #    self.gameOver(500)
+            elif self.mode == "highscores":
+                self.highscoresScreen()
             elif self.mode == "multiplayer":
                 self.multiplayer()
         pygame.quit()
